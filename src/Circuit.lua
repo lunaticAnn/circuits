@@ -8,7 +8,8 @@
 	[ ] UnitDeploy
 	[x] Scalable
 	[x] Circuit Generation
-	[ ] Electricity
+	[x] Electricity
+	[ ] Random interpolation number for different path
 --]]
 
 local rs = game:GetService("ReplicatedStorage")
@@ -18,6 +19,7 @@ local gridGenerator = GridGenerator.new(50, 50, 3, true)
 local CIRCUIT_WIDTH = 0.8
 local NODE_SIZE = 1.6
 local SQRT_2 = math.sqrt(2)
+local INTERPOLATION_NUMBER = 30
 
 local seedPool = {}
 
@@ -79,12 +81,12 @@ local function generateCircuit(instancePath, moves, circuitWidth)
 	local electricity = rs.Electricity:Clone()
 	electricity.Parent = circuitUnit
 	electricity.Emitter.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, w* 0.9),
+		NumberSequenceKeypoint.new(0, w * 0.9),
 		NumberSequenceKeypoint.new(1, w * 0.85),
 	})
 	seedPool[electricity] = {
-		seed = 30 * (size - 1),
-		seedConstraint = 30 * (size - 1),
+		seed = 1,
+		seedConstraint = INTERPOLATION_NUMBER * (size - 1),
 		instancePath = instancePath
 	}
 end
@@ -96,8 +98,8 @@ local function createCircuitUnit(startX, startY, endX, endY, width, _id, _debugC
 			result.instancePath[i].CollisionGroupId = _id or 1
 			if _debugColor then
 				result.instancePath[i].Color = Color3.new(_debugColor.r/#result.instancePath * i,
-														  _debugColor.g/#result.instancePath * i,
-				  										  _debugColor.b/#result.instancePath * i)
+									  _debugColor.g/#result.instancePath * i,
+				  					  _debugColor.b/#result.instancePath * i)
 			end
 		end
 		generateCircuit(result.instancePath, result.moves, width)		
@@ -134,20 +136,22 @@ gridGenerator:markOccupied(24, 28)
 gridGenerator:markOccupied(24, 29)
 gridGenerator:markOccupied(7, 16)
 gridGenerator:markOccupied(8, 15)
+gridGenerator:markOccupied(8, 16)
+gridGenerator:markOccupied(16, 18)
 gridGenerator:markOccupied(26, 29)
 gridGenerator:markOccupied(25, 29)
 gridGenerator:markOccupied(25, 28)
 
-createCircuitUnit(25,25,3,7)
-createCircuitUnit(26,25,3,6,1.2)
-createCircuitUnit(27,25,3,5,0.4)
-createCircuitUnit(28,25,3,4,0.6)
-createCircuitUnit(24,26,7,14)
-createCircuitUnit(24,27,8,15,1)
-createCircuitUnit(24,28,24,28)
-createCircuitUnit(6,18,6,18)
-createCircuitUnit(24,29,8,16, 0.4)
-createCircuitUnit(25,30,16,18, 1.4)
+createCircuitUnit(3, 7, 25, 25)
+createCircuitUnit(3, 6, 26, 25, 1.2)
+createCircuitUnit(3, 5, 27, 25, 0.4)
+createCircuitUnit(3, 4, 28, 25, 0.6)
+createCircuitUnit(7, 14, 24, 26)
+createCircuitUnit(8, 15, 24, 27, 1)
+createCircuitUnit(24, 28, 24, 28)
+createCircuitUnit(6, 18, 6, 18)
+createCircuitUnit(16, 18, 24, 29, 0.4)
+createCircuitUnit(8, 16, 25, 30, 1.4)
 
 
 local RunService = game:GetService("RunService")
@@ -155,10 +159,10 @@ local RunService = game:GetService("RunService")
 RunService.Heartbeat:connect(function()
 	for electricity, seedObj in pairs(seedPool) do
 		-- update seed
-		seedObj.seed = seedObj.seed - 1
-		if seedObj.seed == 1 then
-			seedObj.seed = seedObj.seedConstraint
+		seedObj.seed = seedObj.seed + 1
+		if seedObj.seed == seedObj.seedConstraint then
+			seedObj.seed = 1
 		end
-		electricity.Position =  interpolate(seedObj.instancePath, seedObj.seed, 30)+ Vector3.new(0,0.15,0)
+		electricity.Position =  interpolate(seedObj.instancePath, seedObj.seed, INTERPOLATION_NUMBER)+ Vector3.new(0,0.15,0)
 	end
 end)
