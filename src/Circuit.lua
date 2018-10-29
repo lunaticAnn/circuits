@@ -149,9 +149,8 @@ createCircuitUnit(3, 4, 28, 25, 0.6)
 createCircuitUnit(7, 14, 24, 26)
 createCircuitUnit(8, 15, 24, 27, 1)
 createCircuitUnit(24, 28, 24, 28)
-createCircuitUnit(6, 18, 6, 18)
-createCircuitUnit(16, 18, 24, 29, 0.4)
-createCircuitUnit(8, 16, 25, 30, 1.4)
+createCircuitUnit(8, 16, 24, 29, 0.4)
+createCircuitUnit(6, 18, 25, 30, 1.4)
 
 
 local RunService = game:GetService("RunService")
