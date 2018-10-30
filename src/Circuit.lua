@@ -34,9 +34,27 @@ local lineOrientation = {
 	["DR"] = Vector3.new(0, 135, 0),
 }
 
+local function generateNode(x, y)
+	
+	if not workspace:FindFirstChild("Nodes") then
+		Nodes = Instance.new("Folder")
+		Nodes.Name = "Nodes"
+		Nodes.Parent = workspace
+	end
+	local Nodes = workspace.Nodes
+	
+	local refInstance = gridGenerator:markOccupied(x, y)
+	if refInstance then
+		local node = rs.Node:Clone()
+		node.Parent = Nodes
+		node.Position = refInstance.Position + Vector3.new(0, 0.1, 0)
+		node.Size = Vector3.new(0.1, NODE_SIZE, NODE_SIZE)
+	end
+end
+
 local function createCentralUnit(x, y, l)
 	--[[
-		  * * * *
+	 (x,y)* * * *
 		* * * * * *
 		* * * * * *
 		* * * * * *
@@ -45,7 +63,26 @@ local function createCentralUnit(x, y, l)
 		Four edges will be the clusters for path-finding
 		x,y will be the topLeft Conner
 	--]]
+	if l < 3 then
+		-- if l less than 3 then it is impossible to generate a shape like this	
+		return
+	end
 	
+	for i = x + 1, x + l - 2 do
+		generateNode(i, y)
+		generateNode(i, y + l - 1)
+	end
+	
+	for j = y + 1, y + l - 2 do
+		generateNode(x, j)
+		generateNode(x + l - 1, j)
+	end
+	
+	for i = x + 1, x + l - 2 do
+		for j = y + 1, y + l -2 do
+			gridGenerator:markOccupied(i, j)
+		end
+	end
 end
 
 local function generateCircuit(instancePath, moves, circuitWidth)
@@ -55,19 +92,10 @@ local function generateCircuit(instancePath, moves, circuitWidth)
 	circuitUnit.Name = "circuitUnit"
 	circuitUnit.Parent = workspace
 
-	-- create start & end node
-	local startNode = rs.Node:Clone()
-	startNode.Parent = circuitUnit
-	startNode.Position = instancePath[1].Position + Vector3.new(0, 0.1, 0)
-	startNode.Size = Vector3.new(0.1, NODE_SIZE, NODE_SIZE)
 	if size == 1 then
 		return
 	end
-	
-	local endNode = rs.Node:Clone()
-	endNode.Parent = circuitUnit
-	endNode.Position = instancePath[size].Position + Vector3.new(0, 0.1, 0)
-	endNode.Size = Vector3.new(0.1, NODE_SIZE, NODE_SIZE)
+
 	for i = 1, size - 1 do
 		local line = rs.Line:Clone()
 		line.Parent = circuitUnit
@@ -116,31 +144,36 @@ local function interpolate(instancePath, seed, interpolationNumber)
 	return instancePath[i].Position * (1 - t) + instancePath[i + 1].Position * t
 end
 
-gridGenerator:markOccupied(2, 2)
-gridGenerator:markOccupied(5, 3)
-gridGenerator:markOccupied(5, 6)
-gridGenerator:markOccupied(16, 15)
-gridGenerator:markOccupied(16, 16)
-gridGenerator:markOccupied(16, 17)
-gridGenerator:markOccupied(16, 18)
-gridGenerator:markOccupied(35, 35)
-gridGenerator:markOccupied(16, 35)
-gridGenerator:markOccupied(16, 36)
-gridGenerator:markOccupied(35, 36)
-gridGenerator:markOccupied(35, 37)
-gridGenerator:markOccupied(35, 38)
-gridGenerator:markOccupied(36, 35)
-gridGenerator:markOccupied(10, 16)
-gridGenerator:markOccupied(9, 16)
-gridGenerator:markOccupied(24, 28)
-gridGenerator:markOccupied(24, 29)
-gridGenerator:markOccupied(7, 16)
-gridGenerator:markOccupied(8, 15)
-gridGenerator:markOccupied(8, 16)
-gridGenerator:markOccupied(16, 18)
-gridGenerator:markOccupied(26, 29)
-gridGenerator:markOccupied(25, 29)
-gridGenerator:markOccupied(25, 28)
+createCentralUnit(24, 25, 6)
+generateNode(2, 2)
+generateNode(5, 3)
+generateNode(5, 6)
+generateNode(16, 15)
+generateNode(16, 16)
+generateNode(16, 17)
+generateNode(16, 18)
+generateNode(35, 35)
+generateNode(16, 35)
+generateNode(16, 36)
+generateNode(35, 36)
+generateNode(35, 37)
+generateNode(35, 38)
+generateNode(36, 35)
+generateNode(10, 16)
+generateNode(9, 16)
+generateNode(7, 16)
+generateNode(8, 15)
+generateNode(8, 16)
+generateNode(16, 18)
+
+generateNode(3,7)
+generateNode(3,6)
+generateNode(3,5)
+generateNode(3,4)
+generateNode(7,14)
+generateNode(8,15)
+generateNode(8,16)
+generateNode(6,18)
 
 createCircuitUnit(3, 7, 25, 25)
 createCircuitUnit(3, 6, 26, 25, 1.2)

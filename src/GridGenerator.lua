@@ -56,12 +56,16 @@ function GridGenerator:getInstance(x, y)
 end
 
 function GridGenerator:markOccupied(x, y)
-	local idx = self:coordToIndex(x, y)
-	self._gridTable[idx].CollisionGroupId = 1
+	local gridInstance = self:getInstance(x, y)
+	if not gridInstance then
+		return
+	end
+	gridInstance.CollisionGroupId = 1
 
 	if self._debug then
-		self._gridTable[idx].Transparency = 1
+		gridInstance.Transparency = 1
 	end
+	return gridInstance
 end
 
 function GridGenerator:markClusters(id, nodeList)
