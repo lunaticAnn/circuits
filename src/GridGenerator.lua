@@ -55,12 +55,12 @@ function GridGenerator:getInstance(x, y)
 	return self._gridTable[self:coordToIndex(x, y)]
 end
 
-function GridGenerator:markOccupied(x, y)
+function GridGenerator:markOccupied(x, y, _id)
 	local gridInstance = self:getInstance(x, y)
 	if not gridInstance then
 		return
 	end
-	gridInstance.CollisionGroupId = 1
+	gridInstance.CollisionGroupId = _id or 1
 
 	if self._debug then
 		gridInstance.Transparency = 1

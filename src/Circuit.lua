@@ -24,6 +24,18 @@ local OFFSET = Vector3.new(0, 0.1, 0)
 
 local seedPool = {}
 
+--[[
+	clusterStructure
+	{
+		[cluster_id] = {
+			{x = 0, y = 0},
+			{x = 20, y = 1},
+			...	
+		}	
+	}
+]]
+local clusters = {}
+
 local lineOrientation = {
 	["U"]  = Vector3.new(0, 90, 0),
 	["UL"] = Vector3.new(0, 135, 0),
@@ -35,6 +47,25 @@ local lineOrientation = {
 	["DR"] = Vector3.new(0, 135, 0),
 }
 
+local gridState = {
+	Empty = 0,
+	PathOrObstacle = 1,
+	UnconnectedNode = 2,
+	ConnectedNode = 3,
+}
+
+local function addToCluster(x, y ,_id)
+	-- Add node to the cluster[_id]
+	if not clusters[_id] then
+		clusters[_id] = {}
+	end
+	local instanceRef = gridGenerator:getInstance(x, y)
+	-- it is a valid node in grid
+	if instanceRef then
+		clusters[_id][instanceRef] = {x = x, y = y}
+	end
+end
+
 local function generateNode(x, y ,parent)
 	
 	if not workspace:FindFirstChild("Nodes") then
@@ -44,7 +75,7 @@ local function generateNode(x, y ,parent)
 	end
 	local Nodes = workspace.Nodes
 	
-	local refInstance = gridGenerator:markOccupied(x, y)
+	local refInstance = gridGenerator:markOccupied(x, y, gridState.UnconnectedNode)
 	if refInstance then
 		local node = rs.Node:Clone()
 		node.Parent = parent or Nodes
@@ -62,7 +93,8 @@ local function createCentralUnit(x, y, l)
 		* * * * * *
 		  * * * *
 		Four edges will be the clusters for path-finding
-		x,y will be the topLeft Conner
+		(x,y) will be the topLeft Conner
+		Add edges to different clusters
 	--]]
 	if l < 3 then
 		-- if l less than 3 then it is impossible to generate a shape like this	
@@ -73,18 +105,23 @@ local function createCentralUnit(x, y, l)
 	cpu.Name = "CenteralUnit"
 	cpu.Parent = workspace	
 	
+	local clusterIdPrefix = "CPU"..tostring(x)..tostring(y)
 	for i = x + 1, x + l - 2 do
 		generateNode(i, y, cpu)
+		addToCluster(i, y, clusterIdPrefix.."U")
 		generateNode(i, y + l - 1, cpu)
+		addToCluster(i, y + l - 1, clusterIdPrefix.."D")
 	end
 	
 	for j = y + 1, y + l - 2 do
 		generateNode(x, j, cpu)
+		addToCluster(x, j, clusterIdPrefix.."L")
 		generateNode(x + l - 1, j, cpu)
+		addToCluster(x + l - 1, j, clusterIdPrefix.."R")
 	end
 	 
 	for i = x + 1, x + l - 2 do
-		for j = y + 1, y + l -2 do
+		for j = y + 1, y + l - 2 do
 			gridGenerator:markOccupied(i, j)
 		end
 	end
@@ -134,7 +171,7 @@ end
 local function createCircuitUnit(startX, startY, endX, endY, width, _id, _debugColor)
 	local result = gridGenerator:path(startX, startY, endX, endY)
 	if result then
-		for i = 1, #result.instancePath do
+		for i = 2, #result.instancePath - 1 do
 			result.instancePath[i].CollisionGroupId = _id or 1
 			if _debugColor then
 				result.instancePath[i].Color = Color3.new(_debugColor.r/#result.instancePath * i,
@@ -142,6 +179,8 @@ local function createCircuitUnit(startX, startY, endX, endY, width, _id, _debugC
 				  					  _debugColor.b/#result.instancePath * i)
 			end
 		end
+		gridGenerator:markOccupied(startX, startY, gridState.ConnectedNode)
+		gridGenerator:markOccupied(endX, endY, gridState.ConnectedNode)	
 		generateCircuit(result.instancePath, result.moves, width)		
 	end
 	return result
@@ -197,7 +236,6 @@ createCircuitUnit(8, 15, 24, 27, 1)
 createCircuitUnit(24, 28, 24, 28)
 createCircuitUnit(8, 16, 24, 29, 0.4)
 createCircuitUnit(6, 18, 25, 30, 1.4)
-
 
 local RunService = game:GetService("RunService")
 
