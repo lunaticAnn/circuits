@@ -20,6 +20,7 @@ local CIRCUIT_WIDTH = 0.8
 local NODE_SIZE = 1.6
 local SQRT_2 = math.sqrt(2)
 local INTERPOLATION_NUMBER = 30
+local OFFSET = Vector3.new(0, 0.1, 0)
 
 local seedPool = {}
 
@@ -34,20 +35,20 @@ local lineOrientation = {
 	["DR"] = Vector3.new(0, 135, 0),
 }
 
-local function generateNode(x, y)
+local function generateNode(x, y ,parent)
 	
 	if not workspace:FindFirstChild("Nodes") then
-		Nodes = Instance.new("Folder")
-		Nodes.Name = "Nodes"
-		Nodes.Parent = workspace
+		local unclusteredNodes = Instance.new("Folder")
+		unclusteredNodes.Name = "Nodes"
+		unclusteredNodes.Parent = workspace
 	end
 	local Nodes = workspace.Nodes
 	
 	local refInstance = gridGenerator:markOccupied(x, y)
 	if refInstance then
 		local node = rs.Node:Clone()
-		node.Parent = Nodes
-		node.Position = refInstance.Position + Vector3.new(0, 0.1, 0)
+		node.Parent = parent or Nodes
+		node.Position = refInstance.Position + OFFSET
 		node.Size = Vector3.new(0.1, NODE_SIZE, NODE_SIZE)
 	end
 end
@@ -68,21 +69,32 @@ local function createCentralUnit(x, y, l)
 		return
 	end
 	
+	local cpu = Instance.new("Folder")
+	cpu.Name = "CenteralUnit"
+	cpu.Parent = workspace	
+	
 	for i = x + 1, x + l - 2 do
-		generateNode(i, y)
-		generateNode(i, y + l - 1)
+		generateNode(i, y, cpu)
+		generateNode(i, y + l - 1, cpu)
 	end
 	
 	for j = y + 1, y + l - 2 do
-		generateNode(x, j)
-		generateNode(x + l - 1, j)
+		generateNode(x, j, cpu)
+		generateNode(x + l - 1, j, cpu)
 	end
-	
+	 
 	for i = x + 1, x + l - 2 do
 		for j = y + 1, y + l -2 do
 			gridGenerator:markOccupied(i, j)
 		end
 	end
+	local corner00 = gridGenerator:markOccupied(x + 1, y + 1)
+	local corner11 = gridGenerator:markOccupied(x + l - 2, y + l - 2)
+	local centerInstance = rs.Line:Clone()
+	local centerLen = (corner11.Position - corner00.Position).magnitude * SQRT_2 / 2
+	centerInstance.Parent = cpu
+	centerInstance.Size = Vector3.new(centerLen, 0.1, centerLen)
+	centerInstance.Position = (corner00.Position + corner11.Position) / 2 + OFFSET
 end
 
 local function generateCircuit(instancePath, moves, circuitWidth)
@@ -99,7 +111,7 @@ local function generateCircuit(instancePath, moves, circuitWidth)
 	for i = 1, size - 1 do
 		local line = rs.Line:Clone()
 		line.Parent = circuitUnit
-		line.Position = (instancePath[i].Position + instancePath[i + 1].Position)/2 + Vector3.new(0, 0.1, 0)
+		line.Position = (instancePath[i].Position + instancePath[i + 1].Position)/2 + OFFSET
 		line.Orientation = lineOrientation[moves[i]]
 		local len = (instancePath[i].Position - instancePath[i + 1].Position).magnitude + w * SQRT_2 / 4
 		line.Size =Vector3.new(len, 0.1, w)
@@ -135,7 +147,7 @@ local function createCircuitUnit(startX, startY, endX, endY, width, _id, _debugC
 	return result
 end
 
--- return a specific position on the path with the specific seed
+-- return a specific position on the path with seed
 local function interpolate(instancePath, seed, interpolationNumber)
 	local size = #instancePath
 	local i = math.ceil(seed / interpolationNumber)
@@ -145,6 +157,7 @@ local function interpolate(instancePath, seed, interpolationNumber)
 end
 
 createCentralUnit(24, 25, 6)
+createCentralUnit(35, 20, 8)
 generateNode(2, 2)
 generateNode(5, 3)
 generateNode(5, 6)
