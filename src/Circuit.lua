@@ -28,8 +28,8 @@ local seedPool = {}
 	clusterStructure
 	{
 		[cluster_id] = {
-			{x = 0, y = 0},
-			{x = 20, y = 1},
+			[instanceReference1] = {x = 0, y = 0},
+			[instanceReference1] = {x = 20, y = 1},
 			...	
 		}	
 	}
@@ -195,6 +195,28 @@ local function interpolate(instancePath, seed, interpolationNumber)
 	return instancePath[i].Position * (1 - t) + instancePath[i + 1].Position * t
 end
 
+local function connectClusters(startId, endId)
+	if not clusters[startId] or not clusters[endId] then
+		return
+	end
+
+	-- iterate through start and end clusters and connecting them as circuit units
+	for instanceRefStart, startNode in pairs(clusters[startId]) do
+		if instanceRefStart.CollisionGroupId == gridState.UnconnectedNode then
+			local candidatePending = false
+			for instanceRefEnd, endNode in pairs(clusters[endId]) do
+				if instanceRefEnd.CollisionGroupId == gridState.UnconnectedNode then
+					candidatePending = true
+					createCircuitUnit(startNode.x, startNode.y, endNode.x, endNode.y)
+					break
+				end
+			end
+			if not candidatePending then
+				break
+			end
+		end
+	end
+end
 createCentralUnit(24, 25, 6)
 createCentralUnit(35, 20, 8)
 generateNode(2, 2)
@@ -236,6 +258,7 @@ createCircuitUnit(8, 15, 24, 27, 1)
 createCircuitUnit(24, 28, 24, 28)
 createCircuitUnit(8, 16, 24, 29, 0.4)
 createCircuitUnit(6, 18, 25, 30, 1.4)
+connectClusters("CPU2425R", "CPU3520L")
 
 local RunService = game:GetService("RunService")
 
