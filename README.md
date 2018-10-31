@@ -4,5 +4,5 @@ Do nothing except for creating a circuit with electricity.
 
 [For sample video click here](https://www.youtube.com/watch?v=FKBWR0rPc8w) .   
 
-[Circuit with clustering, no evaluation applied yet](https://www.youtube.com/watch?v=FKBWR0rPc8w) . 
+[Circuit with clustering, no evaluation applied yet](https://www.youtube.com/watch?v=fKuIWqc_e5k) . 
 
